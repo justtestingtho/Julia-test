@@ -17,12 +17,17 @@ def main():
         package_list = l_json.get("Packages")
 
         pkg_commands = []
-
+        counter = 0
         for pkg in package_list:
+            if counter != len(package_list) - 1:
+                cmd = f'    julia -e \'using Pkg; pkg"add {pkg}"; pkg"precompile"\' && \\\n'
 
-            cmd = f'    julia -e \'using Pkg; pkg"add {pkg}"; pkg"precompile"\' && \\\n'
+            else:
+                cmd = f'    julia -e \'using Pkg; pkg"add {pkg}"; pkg"precompile"\' \n'
+            
             pkg_commands.append(cmd)
-
+            counter += 1
+ 
         remove_pkgs = []
 
         existing_pkg_index = [i for i, s in enumerate(l_docker, start=0) if re.search('.*using Pkg', s)]
@@ -38,7 +43,7 @@ def main():
 
         remove_pkgs[insert_at:insert_at] = pkg_commands
 
-        store_updated = open("Dockerfile", "w")
+        store_updated = open("/codebuild/output/srcDownload/src/Dockerfile", "w")
 
         for update in remove_pkgs:
             store_updated.write(update)

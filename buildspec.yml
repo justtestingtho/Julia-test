@@ -9,6 +9,7 @@ phases:
       - COMMIT_HASH=12345
       - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
       - python generate_docker.py
+
   build:
     commands:
       - echo Build started on `date`

@@ -1,5 +1,0 @@
-println("current time is: $(time())")
-using NeuralPDE, Flux, ModelingToolkit, GalacticOptim, Optim, DiffEqFlux, JSON3, StructTypes, Plots
-import ModelingToolkit: Interval, infimum, supremum
-using BSON: @save
-println("current time is: $(time())")
