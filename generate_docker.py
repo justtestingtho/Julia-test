@@ -43,7 +43,7 @@ def main():
 
         remove_pkgs[insert_at:insert_at] = pkg_commands
 
-        store_updated = open("/codebuild/output/srcDownload/src/Dockerfile", "w")
+        store_updated = open("Dockerfile", "w")
 
         for update in remove_pkgs:
             store_updated.write(update)
