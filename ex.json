@@ -1,3 +1,3 @@
 {
-"Packages": ["JSON3", "BSON"]
+"Packages": ["NeuralPDE", "Flux", "ModelingToolkit", "GalacticOptim", "Optim", "DiffEqFlux", "StructTypes", "Plots",  "JSON3", "BSON"]
 }
