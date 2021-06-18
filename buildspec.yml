@@ -1,0 +1,19 @@
+version: 0.2
+
+
+phases:
+  pre_build:
+    commands:
+      - docker pull julia
+      - REPOSITORY_URI=229684438055.dkr.ecr.us-east-1.amazonaws.com/code-build-test
+      - COMMIT_HASH=12345
+      - IMAGE_TAG=build-$(echo $CODEBUILD_BUILD_ID | awk -F":" '{print $2}')
+      - python generate_docker.py
+
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      - docker build -t $REPOSITORY_URI:latest .
+      - docker tag $REPOSITORY_URI:latest $REPOSITORY_URI:$IMAGE_TAG
+
