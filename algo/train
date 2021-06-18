@@ -1,0 +1,97 @@
+start_time = time()
+using NeuralPDE, Flux, ModelingToolkit, GalacticOptim, Optim, DiffEqFlux, JSON3, StructTypes, Plots
+import ModelingToolkit: Interval, infimum, supremum
+using BSON: @save
+@info "Time it took to compile libraries: " time()-start_time
+struct MyType
+    First_layer::Int
+    Second_layer::Int
+end
+
+StructTypes.StructType(::Type{MyType}) = StructTypes.Struct()
+prefix = "/opt/ml/"
+param_path = joinpath(prefix, "input/config/hyperparameters.json")
+output_path = joinpath(prefix, "output")
+model_path = joinpath(prefix, "model")
+
+try
+    #Loading parameters for model
+    json_string = reduce(replace, ["\n" => "", "\t" => ""], init = read(param_path, String))
+    test_params = JSON3.read(json_string, MyType; parsequoted=true)
+    n1 = test_params.First_layer
+    n2 = test_params.Second_layer
+
+    println("Defining model to be surrogatized by a NeuralPDE")
+    model_time = time()
+    @parameters x y
+    @variables u(..)
+    Dxx = Differential(x)^2
+    Dyy = Differential(y)^2
+
+    # 2D PDE
+    eq  = Dxx(u(x,y)) + Dyy(u(x,y)) ~ -sin(pi*x)*sin(pi*y)
+
+    # Boundary conditions
+    bcs = [u(0,y) ~ 0.f0, u(1,y) ~ -sin(pi*1)*sin(pi*y),
+           u(x,0) ~ 0.f0, u(x,1) ~ -sin(pi*x)*sin(pi*1)]
+    # Space and time domains
+    domains = [x ∈ Interval(0.0,1.0),
+               y ∈ Interval(0.0,1.0)]
+
+    # Neural network
+    dim = 2 # number of dimensions
+    println("Defining NeuralPDE")
+    chain = FastChain(FastDense(dim,n1,Flux.σ),
+                        FastDense(n1,n2,Flux.σ),
+                        FastDense(n2,1))
+
+    # Discretization
+    dx = 0.05
+    discretization = PhysicsInformedNN(chain,GridTraining(dx))
+
+    pde_system = PDESystem(eq,bcs,domains,[x,y],[u])
+    prob = discretize(pde_system,discretization)
+
+    #Optimizer
+    opt = Optim.BFGS()
+    #Callback function
+    loss_track = []
+    cb = function (p,l)
+        push!(loss_track, l)
+        println("train_loss=$l;")
+        return false
+    end
+    @info "Time it took to create NeuralPDE surrogate: " time()-model_time
+    println("Started training")
+    train_time = time()
+    res = GalacticOptim.solve(prob, opt, cb = cb, maxiters=1000)
+    @info "Time it took to train: " time() - train_time
+    println("Finished training - saving model")
+    @save "$model_path/neural_pde" chain
+    #Creating Plot
+    println("Creating Plot")
+    plot_time = time()
+    phi = discretization.phi
+    xs,ys = [ModelingToolkit.infimum(d.domain):dx/10:supremum(d.domain) for d in domains]
+    analytic_sol_func(x,y) = (sin(pi*x)*sin(pi*y))/(2pi^2)
+    u_predict = reshape([first(phi([x,y],res.minimizer)) for x in xs for y in ys],(length(xs),length(ys)))
+    u_real = reshape([analytic_sol_func(x,y) for x in xs for y in ys], (length(xs),length(ys)))
+    diff_u = abs.(u_predict .- u_real)
+    p1 = plot(xs, ys, u_real, linetype=:contourf,title = "analytic");
+    p2 = plot(xs, ys, u_predict, linetype=:contourf,title = "predict");
+    p3 = plot(xs, ys, diff_u,linetype=:contourf,title = "error");
+    p_t = plot(p1,p2,p3);
+    println("Saving Plot")
+    savefig(p_t, "$model_path/plot")
+    @info "Time it took to create plot and save: " time() - plot_time
+    println("Done")
+    exit()
+
+catch e
+    trc = stacktrace(catch_backtrace())
+    open(joinpath(output_path, "failure"), "w") do io
+        print(io, "Exception during training: " * "$e" * "\n" * "$trc")
+    end
+    # A non-zero exit code causes the training job to be marked as Failed.
+    exit()
+    end
