@@ -1,3 +1,3 @@
 start_time = time()
 println(start_time)
-println("lol12")
+println("lol1")
