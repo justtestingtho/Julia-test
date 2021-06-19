@@ -39,7 +39,6 @@ def main():
         f.write("ENTRYPOINT [ 'julia', './algo/train' ]")
         f.close()
         print("Updated Docker File is stored")
-        print("Updated Docker File is stored")
         l_json["IMG_URI"] = os.environ['IMAGE_REPO_NAME']
         l_json["IMG_TAG"] = os.environ['IMAGE_TAG']
         out_file = open('training_config.json','w')
