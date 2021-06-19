@@ -1,3 +1,19 @@
 {
-"Packages": ["NeuralPDE", "Flux", "ModelingToolkit", "GalacticOptim", "Optim", "DiffEqFlux", "StructTypes", "Plots",  "JSON3", "BSON"]
+"GIT_REPO": "NeuralPDE.jl", 
+
+"EXPERIMENT_NAME": "Neural PDE",
+
+"TRIAL_NAME": "ANN-NEURALPDE",
+
+ "IntegerParameterRanges": [ {"MaxValue": "10", "MinValue": "1", "Name": "First_H_Layer" }, {"MaxValue": "10", "MinValue": "1", "Name": "Second_H_Layer" }],
+
+"Packages": ["NeuralPDE", "Flux", "ModelingToolkit", "GalacticOptim", "Optim", "DiffEqFlux", "StructTypes", "Plots",  "JSON3", "BSON"],
+
+ "ResourceLimits": {"MaxNumberOfTrainingJobs": 20, "MaxParallelTrainingJobs": 1 },
+
+ "Strategy": "Bayesian", "HyperParameterTuningJobObjective": {"MetricName": "training:train_loss", "Type": "Maximize"},
+ 
+ "IMG_URI": "",
+ 
+ "IMG_TAG": ""
 }
