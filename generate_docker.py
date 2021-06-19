@@ -39,12 +39,12 @@ def main():
         f.close()
         print("Updated Docker File is stored")
         print("Updated Docker File is stored")
-	l_json["IMG_URI"] = os.environ['IMAGE_REPO_NAME']
-	l_json["IMG_TAG"] = os.environ['IMAGE_TAG']
-	out_file = open('training_config.json','w')
-	out_file.write(json.dumps(l_json))
-	out_file.close()
-	print("Image URI and Tag fields updated in JSON")
+        l_json["IMG_URI"] = os.environ['IMAGE_REPO_NAME']
+        l_json["IMG_TAG"] = os.environ['IMAGE_TAG']
+        out_file = open('training_config.json','w')
+        out_file.write(json.dumps(l_json))
+        out_file.close()
+        print("Image URI and Tag fields updated in JSON")
     
     except Exception as e:
         print("Exception :", e)
