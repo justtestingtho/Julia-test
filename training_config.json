@@ -5,13 +5,13 @@
 
 "TRIAL_NAME": "ANN-NEURALPDE",
 
- "IntegerParameterRanges": [ {"MaxValue": "10", "MinValue": "1", "Name": "First_H_Layer" }, {"MaxValue": "10", "MinValue": "1", "Name": "Second_H_Layer" }],
+ "IntegerParameterRanges": [ {"MaxValue": "10", "MinValue": "1", "Name": "First_layer" }, {"MaxValue": "10", "MinValue": "1", "Name": "Second_layer" }],
 
 "Packages": ["NeuralPDE", "Flux", "ModelingToolkit", "GalacticOptim", "Optim", "DiffEqFlux", "StructTypes", "Plots",  "JSON3", "BSON"],
 
  "ResourceLimits": {"MaxNumberOfTrainingJobs": 20, "MaxParallelTrainingJobs": 1 },
 
- "Strategy": "Bayesian", "HyperParameterTuningJobObjective": {"MetricName": "training:train_loss", "Type": "Maximize"},
+ "Strategy": "Bayesian", "HyperParameterTuningJobObjective": {"MetricName": "train_loss", "Type": "Maximize"},
  
  "IMG_URI": "",
  
