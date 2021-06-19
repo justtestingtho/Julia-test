@@ -82,7 +82,7 @@ try
     p3 = plot(xs, ys, diff_u,linetype=:contourf,title = "error");
     p_t = plot(p1,p2,p3);
     println("Saving Plot")
-    savefig(p_t, "$model_path/plots")
+    savefig(p_t, "$model_path/plot")
     @info "Time it took to create plot and save: " time() - plot_time
     println("Done")
     exit()
