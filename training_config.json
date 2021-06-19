@@ -11,7 +11,7 @@
 
  "ResourceLimits": {"MaxNumberOfTrainingJobs": 20, "MaxParallelTrainingJobs": 1 },
 
- "Strategy": "Bayesian", "HyperParameterTuningJobObjective": {"MetricName": "train_loss", "Type": "Maximize"},
+ "Strategy": "Bayesian", "HyperParameterTuningJobObjective": {"MetricName": "train_loss", "Type": "Minimize"},
  
  "IMG_URI": "",
  

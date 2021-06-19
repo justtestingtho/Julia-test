@@ -6,6 +6,7 @@ using BSON: @save
 struct MyType
     First_layer::Int
     Second_layer::Int
+    _tuning_objective_metric::String
 end
 
 StructTypes.StructType(::Type{MyType}) = StructTypes.Struct()
