@@ -31,13 +31,14 @@ def main():
                 f.write(cmd)
 
         f.write("\n")            
-        f.write("ENV PATH='/opt/program:${PATH}'")
+        f.write('ENV PATH="/opt/program:${PATH}"')
         f.write("\n")
         f.write("WORKDIR /opt/program")
         f.write("\n")
         f.write("COPY . /opt/program")
         f.write("\n")
-        f.write("ENTRYPOINT [ 'julia', './algo/train' ]")
+        f.write("\n")
+        f.write('ENTRYPOINT [ "julia", "./algo/train" ]')
         f.close()
         print("Updated Docker File is stored")
         l_json["IMG_URI"] = os.environ['IMAGE_REPO_NAME']
