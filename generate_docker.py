@@ -17,6 +17,8 @@ def main():
         pkg_commands = []
         l_size = len(package_list)
         f = open("Dockerfile", 'w')
+        f.write("#!/bin/bash")
+        f.write("\n")
         f.write("FROM julia:latest")
         f.write("\n")
         f.write("\n")
