@@ -1,7 +1,7 @@
 {
 "GIT_REPO": "NeuralPDE.jl", 
 
-"EXPERIMENT_NAME": "Neural PDE",
+"EXPERIMENT_NAME": "Neural-PDE",
 
 "TRIAL_NAME": "ANN-NEURALPDE",
 
@@ -12,6 +12,8 @@
  "ResourceLimits": {"MaxNumberOfTrainingJobs": 20, "MaxParallelTrainingJobs": 1 },
 
  "Strategy": "Bayesian", "HyperParameterTuningJobObjective": {"MetricName": "train_loss", "Type": "Minimize"},
+ 
+ "metric_logs": [{"Name": "train_loss", "Regex": "train_loss=(.*?);"}],
  
  "IMG_URI": "",
  
