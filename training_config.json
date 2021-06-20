@@ -9,7 +9,7 @@
 
 "Packages": ["NeuralPDE", "Flux", "ModelingToolkit", "GalacticOptim", "Optim", "DiffEqFlux", "StructTypes", "Plots",  "JSON3", "BSON"],
 
- "ResourceLimits": {"MaxNumberOfTrainingJobs": 20, "MaxParallelTrainingJobs": 1 },
+ "ResourceLimits": {"MaxNumberOfTrainingJobs": 1, "MaxParallelTrainingJobs": 1 },
 
  "Strategy": "Bayesian", "HyperParameterTuningJobObjective": {"MetricName": "train_loss", "Type": "Minimize"},
  
