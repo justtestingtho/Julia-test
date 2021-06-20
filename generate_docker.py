@@ -33,6 +33,8 @@ def main():
         f.write("\n")            
         f.write("ENV PATH='/opt/program:${PATH}'")
         f.write("\n")
+        f.write("WORKDIR /opt/program")
+        f.write("\n")
         f.write("COPY . /opt/program")
         f.write("\n")
         f.write("ENTRYPOINT [ 'julia', './algo/train' ]")
