@@ -1,9 +1,9 @@
 {
 "GIT_REPO": "NeuralPDE.jl", 
 
-"EXPERIMENT_NAME": "PoissonEq11",
+"EXPERIMENT_NAME": "PoissonEq12",
 
-"TRIAL_NAME": "ANNNeuralPDE11",
+"TRIAL_NAME": "ANNNeuralPDE12",
 
  "ParameterRanges":{"IntegerParameterRanges": [ {"MaxValue": "10", "MinValue": "1", "Name": "First_layer" }, {"MaxValue": "10", "MinValue": "1", "Name": "Second_layer" }]},
 
