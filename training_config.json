@@ -1,13 +1,13 @@
 {
 "GIT_REPO": "NeuralPDE.jl", 
 
-"EXPERIMENT_NAME": "2DPDE",
+"EXPERIMENT_NAME": "PoissonEqn",
 
 "TRIAL_NAME": "ANNNeuralPDE",
 
  "ParameterRanges":{"IntegerParameterRanges": [ {"MaxValue": "10", "MinValue": "1", "Name": "First_layer" }, {"MaxValue": "10", "MinValue": "1", "Name": "Second_layer" }]},
 
-"Packages": ["NeuralPDE", "Flux", "ModelingToolkit", "GalacticOptim", "Optim", "DiffEqFlux", "StructTypes", "Plots",  "JSON3", "BSON", "QuasiMonteCarlo", "Quadrature", "Cuba", "Printf"],
+"Packages": ["NeuralPDE", "Flux", "ModelingToolkit", "GalacticOptim", "Optim", "DiffEqFlux", "StructTypes", "Plots",  "JSON3", "BSON"],
 
  "ResourceLimits": {"MaxNumberOfTrainingJobs": 5, "MaxParallelTrainingJobs": 1 },
 
