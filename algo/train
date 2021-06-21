@@ -2,7 +2,7 @@ start_time = time()
 using NeuralPDE, Flux, ModelingToolkit, GalacticOptim, Optim, DiffEqFlux, JSON3, StructTypes, Plots
 import ModelingToolkit: Interval, infimum, supremum
 using BSON: @save
-@info "Time it took to compile libraries: " time()-start_time
+@info "Time to compile libraries: " time()-start_time
 struct MyType
     First_layer::Int
     Second_layer::Int
