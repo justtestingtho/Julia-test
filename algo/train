@@ -1,14 +1,17 @@
-start_time = time()
-using NeuralPDE, Flux, ModelingToolkit, GalacticOptim, Optim, DiffEqFlux, JSON3, StructTypes, Plots
-import ModelingToolkit: Interval, infimum, supremum
+start_t = time()
+using NeuralPDE, Flux, ModelingToolkit, GalacticOptim, Optim, DiffEqFlux
+using Quadrature, Cuba, QuasiMonteCarlo, Printf, Plots, StructTypes, JSON3
 using BSON: @save
-@info "Time to compile libraries: " time()-start_time
+import ModelingToolkit: Interval, infimum, supremum
+@info "Time to compile: " time() - start_t
+###Define a struct that defines the types of parameters in the JSON file
 struct MyType
     First_layer::Int
     Second_layer::Int
     _tuning_objective_metric::String
 end
 
+##Boiler code for paths, don't change
 StructTypes.StructType(::Type{MyType}) = StructTypes.Struct()
 prefix = "/opt/ml/"
 param_path = joinpath(prefix, "input/config/hyperparameters.json")
@@ -19,72 +22,100 @@ try
     #Loading parameters for model
     json_string = reduce(replace, ["\n" => "", "\t" => ""], init = read(param_path, String))
     test_params = JSON3.read(json_string, MyType; parsequoted=true)
+    #Unpack parameters from JSON here
     n1 = test_params.First_layer
     n2 = test_params.Second_layer
-
     println("Defining model to be surrogatized by a NeuralPDE")
-    model_time = time()
-    @parameters x y
+    #3D PDE
+    model_def_t = time()
+    @parameters t x y
     @variables u(..)
     Dxx = Differential(x)^2
     Dyy = Differential(y)^2
+    Dt = Differential(t)
+    t_min= 0.
+    t_max = 2.0
+    x_min = 0.
+    x_max = 2.
+    y_min = 0.
+    y_max = 2.
 
-    # 2D PDE
-    eq  = Dxx(u(x,y)) + Dyy(u(x,y)) ~ -sin(pi*x)*sin(pi*y)
+    # 3D PDE
+    eq  = Dt(u(t,x,y)) ~ Dxx(u(t,x,y)) + Dyy(u(t,x,y))
 
-    # Boundary conditions
-    bcs = [u(0,y) ~ 0.f0, u(1,y) ~ -sin(pi*1)*sin(pi*y),
-           u(x,0) ~ 0.f0, u(x,1) ~ -sin(pi*x)*sin(pi*1)]
+    analytic_sol_func(t,x,y) = exp(x+y)*cos(x+y+4t)
+    # Initial and boundary conditions
+    bcs = [u(t_min,x,y) ~ analytic_sol_func(t_min,x,y),
+            u(t,x_min,y) ~ analytic_sol_func(t,x_min,y),
+            u(t,x_max,y) ~ analytic_sol_func(t,x_max,y),
+            u(t,x,y_min) ~ analytic_sol_func(t,x,y_min),
+            u(t,x,y_max) ~ analytic_sol_func(t,x,y_max)]
+
     # Space and time domains
-    domains = [x ∈ Interval(0.0,1.0),
-               y ∈ Interval(0.0,1.0)]
+    domains = [t ∈ Interval(t_min,t_max),
+                x ∈ Interval(x_min,x_max),
+                y ∈ Interval(y_min,y_max)]
 
     # Neural network
-    dim = 2 # number of dimensions
+    inner = 10
     println("Defining NeuralPDE")
-    chain = FastChain(FastDense(dim,n1,Flux.σ),
-                        FastDense(n1,n2,Flux.σ),
-                        FastDense(n2,1))
+    chain = FastChain(FastDense(3,n1,Flux.σ),
+                  FastDense(n1,n2,Flux.σ),
+                  FastDense(n2,inner,Flux.σ),
+                  FastDense(inner,1))
 
-    # Discretization
-    dx = 0.05
-    discretization = PhysicsInformedNN(chain,GridTraining(dx))
+    initθ = DiffEqFlux.initial_params(chain)
 
-    pde_system = PDESystem(eq,bcs,domains,[x,y],[u])
-    prob = discretize(pde_system,discretization)
-
-    #Optimizer
-    opt = Optim.BFGS()
-    #Callback function
-    loss_track = []
+    strategy = NeuralPDE.QuasiRandomTraining(6000; #points
+                                         sampling_alg = UniformSample(),
+                                         minibatch = 100)
+    discretization = NeuralPDE.PhysicsInformedNN(chain,
+                                             strategy;
+                                             init_params = initθ)
+    phi = discretization.phi
+    pde_system = PDESystem(eq,bcs,domains,[t,x,y],[u])
+    prob = NeuralPDE.discretize(pde_system,discretization)
+    maxiters = 5
     cb = function (p,l)
-        push!(loss_track, l)
         println("train_loss=$l;")
         return false
     end
-    @info "Time it took to create NeuralPDE surrogate: " time()-model_time
+    @info "Time to define model: " time()-model_def_t
     println("Started training")
-    train_time = time()
-    res = GalacticOptim.solve(prob, opt, cb = cb, maxiters=1000)
-    @info "Time it took to train: " time() - train_time
+    train_t = time()
+    res = GalacticOptim.solve(prob,ADAM(0.1);cb=cb,maxiters=maxiters)
+    prob = remake(prob,u0=res.minimizer)
+    res = GalacticOptim.solve(prob,ADAM(0.01);cb=cb,maxiters=maxiters)
+    prob = remake(prob,u0=res.minimizer)
+    res = GalacticOptim.solve(prob,ADAM(0.001);cb=cb,maxiters=maxiters)
+    @info "Time to define model: " time()-train_t
     println("Finished training - saving model")
     @save "$model_path/neural_pde" chain
     #Creating Plot
     println("Creating Plot")
-    plot_time = time()
-    phi = discretization.phi
-    xs,ys = [ModelingToolkit.infimum(d.domain):dx/10:supremum(d.domain) for d in domains]
-    analytic_sol_func(x,y) = (sin(pi*x)*sin(pi*y))/(2pi^2)
-    u_predict = reshape([first(phi([x,y],res.minimizer)) for x in xs for y in ys],(length(xs),length(ys)))
-    u_real = reshape([analytic_sol_func(x,y) for x in xs for y in ys], (length(xs),length(ys)))
-    diff_u = abs.(u_predict .- u_real)
-    p1 = plot(xs, ys, u_real, linetype=:contourf,title = "analytic");
-    p2 = plot(xs, ys, u_predict, linetype=:contourf,title = "predict");
-    p3 = plot(xs, ys, diff_u,linetype=:contourf,title = "error");
-    p_t = plot(p1,p2,p3);
+    plot_t = time()
+
+    ts,xs,ys = [infimum(d.domain):0.1:supremum(d.domain) for d in domains]
+    function plot_(res)
+        # Animate
+        anim = @animate for (i, t) in enumerate(0:0.05:t_max)
+            @info "Animating frame $i..."
+            u_real = reshape([analytic_sol_func(t,x,y) for x in xs for y in ys], (length(xs),length(ys)))
+            u_predict = reshape([Array(phi([t, x, y], res.minimizer))[1] for x in xs for y in ys], length(xs), length(ys))
+            u_error = abs.(u_predict .- u_real)
+            title = @sprintf("predict t = %.3f", t)
+            p1 = plot(xs, ys, u_predict,st=:surface, label="", title=title);
+            title = @sprintf("real")
+            p2 = plot(xs, ys, u_real,st=:surface, label="", title=title);
+            title = @sprintf("error")
+            p3 = plot(xs, ys, u_error, st=:contourf,label="", title=title);
+            plot(p1,p2,p3);
+        end
+        gif(anim,"$output_path/plot.gif", fps=10);
+    end
     println("Saving Plot")
-    savefig(p_t, "$model_path/plot")
-    @info "Time it took to create plot and save: " time() - plot_time
+    plot_(res);
+    @info "Time to plot: " time()-plot_t
     println("Done")
     exit()
 
