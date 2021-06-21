@@ -65,7 +65,7 @@ try
     @info "Time it took to create NeuralPDE surrogate: " time()-model_time
     println("Started training")
     train_time = time()
-    res = GalacticOptim.solve(prob, opt, cb = cb, maxiters=1000)
+    res = GalacticOptim.solve(prob, opt, cb = cb, maxiters=5)
     @info "Time it took to train: " time() - train_time
     println("Finished training - saving model")
     @save "$model_path/neural_pde" chain
