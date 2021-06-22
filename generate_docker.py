@@ -38,7 +38,7 @@ def main():
         f.write("COPY . /opt/program")
         f.write("\n")
         f.write("\n")
-        f.write('ENTRYPOINT [ "julia", "./algo/train" ]')
+        f.write('ENTRYPOINT [ "julia", "./algo/train.jl" ]')
         f.close()
         print("Updated Docker File is stored")
         l_json["IMG_URI"] = os.environ['IMAGE_REPO_NAME']
